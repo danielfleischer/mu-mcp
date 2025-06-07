@@ -4,7 +4,7 @@
 from mcp.server.fastmcp import FastMCP
 
 # Initialize FastMCP server
-mcp = FastMCP("mu-mcp")
+mu_mcp = FastMCP("mu_mcp")
 
 
 # async def make_nws_request(url: str) -> dict[str, Any] | None:

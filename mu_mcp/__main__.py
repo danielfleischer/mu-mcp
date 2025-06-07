@@ -1,4 +1,4 @@
-from .server import mcp
+from .mu_mcp import mu_mcp
 
 if __name__ == "__main__":
-    mcp.run(transport="stdio")
+    mu_mcp.run(transport="stdio")
