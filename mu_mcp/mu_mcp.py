@@ -1,6 +1,3 @@
-# from typing import Any
-
-# import httpx
 from mcp.server.fastmcp import FastMCP
 
 # Initialize FastMCP server
@@ -17,9 +14,15 @@ def health_check() -> str:
     return "ok"
 
 
-@mcp.prompt(name="Search Emails")
-def create_query(query: str) -> str:
-    return f"Given the following query, create a mu search command.Query:\n\n{query}\n\nmu manual: {mu_query_man}"
+# @mcp.prompt(name="Search Emails")
+# def create_query(query: str) -> str:
+#     return f"Given the following query, create a mu search command.Query:\n\n{query}\n\nmu manual: {mu_query_man}"
+
+
+@mcp.resource("resource://query-manual", name="Query Manual")
+def get_manual() -> str:
+    """Man page for using mu query"""
+    return mu_query_man
 
 
 @mcp.tool("query")
