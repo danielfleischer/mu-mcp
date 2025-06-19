@@ -7,11 +7,19 @@ from mcp.server.fastmcp import FastMCP
 mcp = FastMCP("mu_mcp")
 
 
+mu_query_man = open("mu_mcp/mu-query.txt", "r").read().strip()
+
+
 # Add MCP health check tool
 @mcp.tool("health_check")
 def health_check() -> str:
     """Health check for the MCP server."""
     return "ok"
+
+
+@mcp.prompt(name="Search Emails")
+def create_query(query: str) -> str:
+    return f"Given the following query, create a mu search command.Query:\n\n{query}\n\nmu manual: {mu_query_man}"
 
 
 @mcp.tool("query")
