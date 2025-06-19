@@ -5,9 +5,9 @@ description = "A Model Context Protocol (MCP) server for mail-utils (mu) email i
 authors = [
     { name = "Daniel Fleischer" }
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
-    "mcp",
+    "mcp[cli]",
     "mcp-server",
 ]
 
