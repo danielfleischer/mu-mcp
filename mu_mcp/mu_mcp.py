@@ -14,7 +14,6 @@ def health_check() -> str:
     return "ok"
 
 
-@mcp.tool("query")
 def query(query: str) -> str:
     """
     Query `mu` by providing a valid query to be sent in the following way
@@ -37,6 +36,8 @@ def query(query: str) -> str:
 
 
 query.__doc__ += "\n\n" + mu_query_man
+
+mcp.tool("query")(query)
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")
