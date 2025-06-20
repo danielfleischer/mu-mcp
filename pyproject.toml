@@ -2,14 +2,9 @@
 name = "mu-mcp"
 version = "0.1.0"
 description = "A Model Context Protocol (MCP) server for mail-utils (mu) email indexing and search tool."
-authors = [
-    { name = "Daniel Fleischer" }
-]
+authors = [{ name = "Daniel Fleischer" }]
 requires-python = ">=3.10"
-dependencies = [
-    "mcp[cli]",
-    "mcp-server",
-]
+dependencies = ["mcp[cli]", "mcp-server"]
 
 [tool.setuptools]
 py-modules = ["mu-mcp"]

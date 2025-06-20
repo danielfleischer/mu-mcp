@@ -14,20 +14,17 @@ def health_check() -> str:
     return "ok"
 
 
-# @mcp.prompt(name="Search Emails")
-# def create_query(query: str) -> str:
-#     return f"Given the following query, create a mu search command.Query:\n\n{query}\n\nmu manual: {mu_query_man}"
-
-
-@mcp.resource("resource://query-manual", name="Query Manual")
-def get_manual() -> str:
-    """Man page for using mu query"""
-    return mu_query_man
-
-
 @mcp.tool("query")
 def query(query: str) -> str:
-    """Query the MCP server by running a shell command with the mu CLI tool."""
+    """
+    Query `mu` by providing a valid query to be sent in the following way
+
+    ```
+    mu find $query
+    ```
+
+    Here is the syntax guide for mu queries.
+    """
     import subprocess
 
     try:
@@ -37,3 +34,9 @@ def query(query: str) -> str:
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
         return f"Error: {e.stderr.strip()}"
+
+
+query.__doc__ += "\n\n" + mu_query_man
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")
