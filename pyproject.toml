@@ -1,5 +1,5 @@
 [project]
-name = "mu-mcp"
+name = "mu_mcp"
 version = "0.1.0"
 description = "A Model Context Protocol (MCP) server for mail-utils (mu) email indexing and search tool."
 authors = [{ name = "Daniel Fleischer" }]
