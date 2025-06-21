@@ -5,8 +5,7 @@ description = "A Model Context Protocol (MCP) server for mail-utils (mu) email i
 authors = [{ name = "Daniel Fleischer" }]
 requires-python = ">=3.10"
 dependencies = ["mcp[cli]", "mcp-server"]
-license = "GPL3"
-license-files = ["LICENSE"]
+license = { file = "LICENSE" }
 
 [tool.setuptools]
 py-modules = ["mu-mcp"]
