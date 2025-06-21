@@ -5,6 +5,7 @@ mcp = FastMCP("mu_mcp")
 
 
 mu_query_man = open("mu_mcp/mu-query.txt", "r").read().strip()
+mu_find_man = open("mu_mcp/mu-find.txt", "r").read().strip()
 
 
 # Add MCP health check tool
@@ -35,9 +36,35 @@ def query(query: str) -> str:
         return f"Error: {e.stderr.strip()}"
 
 
-query.__doc__ += "\n\n" + mu_query_man
+query.__doc__ += "\n\n" + mu_find_man + mu_query_man
 
 mcp.tool("query")(query)
+
+
+@mcp.tool("view")
+def view(paths: str) -> str:
+    """
+    View emails using `mu`, by providing their paths.
+
+    ```
+    mu view $paths
+    ```
+
+    Paths can be extracted using the following:
+    ```
+    mu find --fields "l" SOME_QUERY
+    ```
+    """
+    import subprocess
+
+    try:
+        result = subprocess.run(
+            ["mu", "view"] + paths.split(), capture_output=True, text=True, check=True
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        return f"Error: {e.stderr.strip()}"
+
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")

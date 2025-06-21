@@ -2,12 +2,11 @@
 
 A Model Context Protocol (MCP) server for querying your local [`mu`](https://www.djcbsoftware.nl/code/mu/) mail index. This server enables fast, structured mail search from Claude Desktop and other MCP clients.
 
-> [!NOTE]
-> Currently only one tool, called `query` for searching emails. Output is a list containing the fields: date, subject, to/from.
 
 ## Features
 
 - **Stdio MCP server** for easy integration
+- **Two tools:** query and view emails.
 - **Fast, flexible mail search** using the `mu` index
 - **Claude Desktop ready**: simple installation and config
 - **Python, uv, and MCP SDK** based
@@ -63,9 +62,9 @@ Replace `PROJECT_PATH` with the path to your cloned repo.
 
 ## Query
 
-Ask Claude to find emails, e.g. "Find emails with a PDF attachment that were sent last April".
+Ask Claude to find emails, e.g. "Find emails with a PDF attachment that were sent last April", "Show me the email I received from Alice last week", or "Find emails with the subject 'Meeting Notes'".
 
 ## Development
 
-- [ ] Adding a tool to view an email.
+- [x] Adding a tool to view an email.
 - [ ] Adding a tool to find and download attachments.
