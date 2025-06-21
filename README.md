@@ -1,7 +1,12 @@
+
 # mu-mcp: MCP Server for the `mu` Mail Indexer
+
+[![GitHub release](https://img.shields.io/github/v/release/danielfleischer/mu-mcp?include_prereleases)](https://github.com/danielfleischer/mu-mcp/releases)
+[![GitHub license](https://img.shields.io/github/license/danielfleischer/mu-mcp)](https://github.com/danielfleischer/mu-mcp/blob/master/LICENSE)
 
 A Model Context Protocol (MCP) server for querying your local [`mu`](https://www.djcbsoftware.nl/code/mu/) mail index. This server enables fast, structured mail search from Claude Desktop and other MCP clients.
 
+<img src="assets/claude-screenshot.png" width="500"/>
 
 ## Features
 
