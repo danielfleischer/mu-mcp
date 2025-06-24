@@ -1,0 +1,126 @@
+MU EXTRACT(1)		    General Commands Manual		 MU EXTRACT(1)
+
+NAME
+       mu-extract - display and save message parts (attachments), and open
+       them with other tools.
+
+SYNOPSIS
+       mu [COMMON-OPTIONS] extract [OPTIONS] [FILE]
+
+
+       mu [COMMON-OPTIONS] extract [OPTIONS] FILE PATTERN
+
+DESCRIPTION
+       mu extract is the mu sub-command for extracting MIME-parts (e.g.,
+       attachments) from mail messages. The sub-command works on message
+       files, and does not require the message to be indexed in the database.
+
+
+       For attachments, the file name used when saving it is the name of the
+       attachment in the message. If there is no such name, or when saving
+       non-attachment MIME-parts, a name is derived from the message-id of the
+       message.
+
+
+       If you specify a regular express pattern as the second argument, all
+       attachments with filenames matching that pattern will be extracted. The
+       regular expressions are basic PCRE, and are case-sensitive by default;
+       see pcre(3) for more details.
+
+
+       Without any options, mu extract simply outputs the list of leaf MIME-
+       parts in the message. Only `leaf' MIME-parts (including RFC822
+       attachments) are considered, multipart/* etc. are ignored.
+
+
+       Without a filename parameter, mu extract reads a message from standard-
+       input. In that case, you cannot use the second, PATTERN parameter as
+       this would be ambiguous; instead, use the --matches option.
+
+EXTRACT OPTIONS
+   -a, --save-attachments
+       Save all MIME-parts that look like attachments.
+
+   --save-all
+       Save all non-multipart MIME-parts.
+
+   --parts parts
+       Only consider the following numbered parts (comma-separated list). The
+       numbers for the parts can be seen from running mu extract without any
+       options but only the message file.
+
+   --target-dir dir
+       Save the parts in dir rather than the current working directory.
+
+   --overwrite
+       Overwrite existing files with the same name; by default overwriting is
+       not allowed.
+
+   -u,--uncooked
+       By default, mu transforms the attachment filenames a bit (such as by
+       replacing spaces by dashes); with this option, leave that to the
+       minimum for creating a legal filename in the target directory.
+
+   --matches pattern
+       Attachments with filenames matching pattern will be extracted. The
+       regular expressions are basic PCRE, and are case-sensitive by default;
+       see pcre(3) for more details.
+
+   --play
+       Try to `play' (open) the attachment with the default application for
+       the particular file type. On MacOS, this uses the open program, on
+       other platforms it uses xdg-open. You can choose a different program by
+       setting the MU_PLAY_PROGRAM environment variable.
+
+COMMON OPTIONS
+   -d, --debug
+       Makes mu generate extra debug information, useful for debugging the
+       program itself. Debug information goes to the standard logging
+       location; see mu(1).
+
+   -q, --quiet
+       Causes mu not to output informational messages and progress information
+       to standard output, but only to the log file. Error messages will still
+       be sent to standard error. Note that mu index is much faster with
+       --quiet, so it is recommended you use this option when using mu from
+       scripts etc.
+
+   --log-stderr
+       Causes mu to not output log messages to standard error, in addition to
+       sending them to the standard logging location.
+
+   --nocolor
+       Do not use ANSI colors. The environment variable NO_COLOR can be used
+       as an alternative to --nocolor.
+
+   -V, --version
+       Prints mu version and copyright information.
+
+   -h, --help
+       Lists the various command line options.
+
+EXAMPLES
+       To display information about all the MIME-parts in a message file:
+	      $ mu extract msgfile
+
+
+
+       To extract MIME-part 3 and 4 from this message, overwriting existing
+       files with the same name:
+	      $ mu extract --parts=3,4 --overwrite msgfile
+
+
+
+       To extract all files ending in `.jpg' (case-insensitive):
+	      $ mu extract msgfile '.*\.jpg'
+
+
+
+       To extract an mp3-file, and play it in the default mp3-playing
+       application:
+	      $ mu extract --play msgfile 'whoopsididitagain.mp3'
+
+
+
+       when reading from standard-input, you need --matches, so:
+	      $ cat msgfile | mu extract --play --matches 'whoopsididitagain.mp3'

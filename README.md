@@ -11,7 +11,7 @@ A Model Context Protocol (MCP) server for querying your local [`mu`](https://git
 ## Features
 
 - **Stdio MCP server** for easy integration
-- **Two tools:** query and view emails.
+- **Three tools:** query, view emails and open attachments (using default OS viewer).
 - **Fast, flexible mail search** using the `mu` index
 - **Claude Desktop ready**: simple installation and config
 - **Python, uv, and MCP SDK** based
@@ -67,9 +67,9 @@ Replace `PROJECT_PATH` with the path to your cloned repo.
 
 ## Query
 
-Ask Claude to find emails, e.g. "Find emails with a PDF attachment that were sent last April", "Show me the email I received from Alice last week", or "Find emails with the subject 'Meeting Notes'".
+Ask Claude to find emails, e.g. "Find emails with a PDF attachment that were sent last April and open the PDF", "Show me the email I received from Alice last week", or "Find emails with the subject 'Meeting Notes'".
 
 ## Development
 
 - [x] Adding a tool to view an email.
-- [ ] Adding a tool to find and download attachments.
+- [x] Adding a tool to find and download attachments.
