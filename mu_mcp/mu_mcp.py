@@ -17,8 +17,9 @@ def health_check() -> str:
 
 
 def query(query: str) -> str:
-    """
-    Query `mu` by providing a valid query to be sent in the following way
+    """Query `mu` by providing a valid query to be sent in the following way.
+
+    Syntax:
 
     ```
     mu find $query
@@ -37,15 +38,15 @@ def query(query: str) -> str:
         return f"Error: {e.stderr.strip()}"
 
 
-query.__doc__ += "\n\n" + mu_find_man + mu_query_man
+if query.__doc__:
+    query.__doc__ += "\n\n" + mu_find_man + mu_query_man
 
 mcp.tool("query")(query)
 
 
 @mcp.tool("view")
 def view(paths: str) -> str:
-    """
-    View emails using `mu`, by providing their paths.
+    """View emails using `mu`, by providing their paths.
 
     ```
     mu view $paths
@@ -68,8 +69,7 @@ def view(paths: str) -> str:
 
 
 def get_attachment(command: str) -> str:
-    r"""
-    Open attachments in email by providing the email path.
+    r"""Open attachments in email by providing the email path.
 
     The tool downloads the attachment into a temp dir and open it.
 
@@ -93,7 +93,8 @@ def get_attachment(command: str) -> str:
         return f"Error: {e.stderr.strip()}"
 
 
-get_attachment.__doc__ += "\n\n" + mu_extract_man
+if get_attachment.__doc__:
+    get_attachment.__doc__ += "\n\n" + mu_extract_man
 
 mcp.tool("get_attachment")(get_attachment)
 
