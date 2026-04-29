@@ -2,4 +2,6 @@
 *.egg-info
 __pycache__/
 *.pyc
-*.pyo
+*.pyo# pixi environments
+.pixi/*
+!.pixi/config.toml

@@ -4,7 +4,7 @@ version = "0.3.0"
 description = "A Model Context Protocol (MCP) server for mail-utils (mu) email indexing and search tool."
 authors = [{ name = "Daniel Fleischer" }]
 requires-python = ">=3.10"
-dependencies = ["mcp[cli]"]
+dependencies = ["mcp[cli]>=1.27.0,<2"]
 license = { file = "LICENSE" }
 
 [tool.setuptools]
@@ -13,3 +13,13 @@ py-modules = ["mu-mcp"]
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["osx-arm64"]
+
+[tool.pixi.pypi-dependencies]
+mu_mcp = { path = ".", editable = true }
+
+[tool.pixi.tasks]
+start = "mcp run mu_mcp/mu_mcp.py"
