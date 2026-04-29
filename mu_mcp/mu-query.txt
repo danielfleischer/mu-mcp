@@ -16,11 +16,6 @@ DESCRIPTION
        flags.
 
 
-       Furthermore, mu find provides the --analyze option, which shows how mu
-       interprets your query; similarly, mu4e has a command. mu4e-analyze-
-       last-query.  See the ANALYZING QUERIES section for further details.
-
-
        NOTE: if you use queries on the command-line (say, for mu find), you
        need to quote any characters that would otherwise be interpreted by the
        shell, such as *--analyze option can be useful.
@@ -39,14 +34,6 @@ TERMS
 	      maildir:/inbox
 
 
-
-       Terms without an explicit field-prefix, (like "vacation" above) are
-       interpreted as:
-
-	      to:vacation or subject:vacation or body:vacation or ...
-
-
-
        The language is case-insensitive for terms and attempts to "flatten"
        diacritics, so angtrom matches Ångström.
 
@@ -55,63 +42,10 @@ TERMS
 
 	      subject:"hi there"
 
-
-
-       This is a so-called phrase query, which means that we match against
-       subjects that contain the literal phrase "hi there". Phrase queries
-       only work for certain fields; they have the word phrase in their mu
-       info fields search column.
-
    Quoting queries for the shell
        Remember that you need to escape the quotes for a search query when
        using this from the command-line; otherwise, the shell (or most shells)
        process the queries and mu never sees them.
-
-
-       In this case, that means the difference between search for a subject
-       "hi there" versus and subject "hi" and some word "there" that can
-       appear in any of the combination fields for <empty> (combination fields
-       are discussed below).
-
-
-       We can use the mentioned --analyze option to show the difference:
-
-
-       #+begin_example mu find subject:"hi there" --analyze
-
-query:
-       subject:hi there
-
-parsed query:
-       (and (subject "hi") (_ "there"))
-
-parsed query (expanded):
-       (and (subject "hi") (or (to "there") (cc "there") (bcc "there") (from
-       "there") (subject "there") (body "there") (embed "there")))
-
-Xapian query:
-	 Query((Shi AND (Tthere OR Cthere OR Hthere OR Fthere OR Sthere OR
-       Bthere OR Ethere))) #+end_example
-
-
-       And with quotes escaped:
-
-
-       #+begin_example mu find subject:$
-
-query:
-       subject:"hi there"
-
-parsed query:
-       (or (subject "hi there") (subject (phrase "hi there")))
-
-Xapian query:
-	 Query((Shi there OR (Shi PHRASE 2 Sthere))) #+end_example
-
-
-       We won't dwell on the details of the --analyze output here, but
-       hopefully this illustrates the difference between quoted and unquoted
-       queries.
 
 LOGICAL OPERATORS
        We can combine terms with logical operators -- binary ones: and, or,
@@ -121,18 +55,6 @@ LOGICAL OPERATORS
 
        You can also group things with ( and ), so you can write:
 	      (subject:beethoven or subject:bach) and not body:elvis
-
-
-
-       If you do not explicitly specify an operator between terms, and is
-       implied, so the queries
-	      subject:chip subject:dale
-
-	      subject:chip AND subject:dale
-
-
-       are equivalent. For readability, we recommend the second version.
-
 
        Note that a pure not - e.g. searching for not apples is quite a "heavy"
        query.
@@ -150,10 +72,6 @@ WILDCARDS
 	      $ mu find "hello*"
 
 
-
-       Quoting the "hello*" is recommended; some shells (but not all) would
-       otherwise expand the '*' to all files in the current directory.
-
 REGULAR EXPRESSIONS
        The query language supports matching basic PCRE regular expressions, as
        per pcre(3), with some limitations.
@@ -170,11 +88,6 @@ REGULAR EXPRESSIONS
        all messages in all maildirs that match "foo", such as "/foo",
        "/bar/cuux/foo", "/fooishbar", and so on.
 
-
-       Regular expressions are more powerful than wildcards, but are also much
-       slower.	Moreover, their behavior in mu can be a bit confusing, due to
-       some implementation details. See below for some of the caveats.
-
    Whitespace in regular expression literals
        To avoid ambiguities in the query parsing, regular express must not
        contain whitespace, so the search for a message with subject "hello
@@ -182,30 +95,8 @@ REGULAR EXPRESSIONS
 	      mu find 'subject:/hello\\040world/'
 
 
-       (with the $ 40 specifying a space in the regular expression, and and
-       extra '$´ to escape it). In many cases,
-	      mu find 'subject:/hello.world/'
-
-
+       In many cases, mu find 'subject:/hello.world/'
        may be good enough, and easier to type.
-
-   Anchors in regular expressions
-       Since the underlying Xapian database does not support regular
-       expressions (it does support wildcards), mu implements the regular-
-       expression search by matching the user's regular expression against all
-       "terms" (words or phrases) that in the database for a given field.
-
-
-       That implementation detail explain why "anchored" regular expressions
-       (with ^ and $ to mark begin/end, respectively) can get unexpected
-       results.
-
-
-       Suppose you want to match all messages that start with "pie", and you
-       search with subject:/^pie/. This also matches messages with subject
-       "apple pie", since both those words are indexed as terms separately (as
-       well as phrases), and thus "^pie" matches as well for a message with
-       subject "apple pie".
 
 FIELDS
        We already saw a number of search fields, such as subject: and body:.
@@ -277,16 +168,6 @@ FIELDS
 	      +-------------+-----------------------------------------+
 	      | <empty>     | to, cc, bcc, from, subject, body, embed |
 	      +-------------+-----------------------------------------+
-
-
-
-       Hence, for instance,
-	      contact:fnorb@example.com
-
-
-       is equivalent to
-	      (from:fnorb@example.com or to:fnorb@example.com or
-		    cc:from:fnorb@example.com or bcc:fnorb@example.com)
 
 
 DATE RANGES
@@ -383,10 +264,6 @@ FLAG FIELD
 	      g:x
 
 
-
-       Encrypted messages may be signed as well, but this is only visible
-       after decrypting and thus invisible to mu.
-
 PRIORITY FIELD
        The message priority field (prio:) has three possible values: low,
        normal or high. For instance, to match high-priority messages:
@@ -402,83 +279,31 @@ MAILDIR
 	      maildir:/lists/running
 
 
-
        Note the starting `/'. If you want to match mails in the "root"
        maildir, you can do with a single `/':
-	      maildir:/
-
-
-
-       If you have maildirs (or any fields) that include spaces, you need to
-       quote them, i.e.,
-	      maildir:"/Sent Items"
-
-
-
-       And once again, note that when using the command-line, such queries
-       must be quoted:
-	      mu find 'maildir:"/Sent Items"'
-
-
-
-       Also note that you should not end the maildir with a /, or it can be
-       misinterpreted as a regular expression term; see aforementioned.
+            maildir:/
 
 MORE EXAMPLES
-       Here are some simple examples of mu queries; you can make many more
-       complicated queries using various logical operators, parentheses and so
-       on, but in the author's experience, it's usually faster to find a
-       message with a simple query just searching for some words.
-
 
        Find all messages with both "bee" and "bird" (in any field)
 	      bee AND bird
 
 
-
        Find all messages with either Frodo or Sam:
 	      Frodo OR Sam
-
-
 
        Find all messages with the "wombat" as subject, and "capybara"
        anywhere:
 	      subject:wombat and capybara
 
-
-
        Find all messages in the "Archive" folder from Fred:
 	      from:fred and maildir:/Archive
-
-
 
        Find all unread messages with attachments:
 	      flag:attach and flag:unread
 
-
-
        Find all messages with PDF-attachments:
 	      mime:application/pdf
 
-
-
        Find all messages with attached images:
 	      mime:image/*
-
-
-       (and beware that on the command-line, you need to put this in quotes or
-       it would expand the *.
-
-
-       Find a messages with the given message-id:
-	      msgid:CAE56pjGU2oNxN-wWku69@mail.gmail.com
-
-
-
-       Find all messages written in Dutch or German with the word "hallo":
-	      hallo and (lang:nl or lang:de)
-
-
-
-       This is only available if your mu has support for this; see mu info and
-       check for "cld2-support*.
