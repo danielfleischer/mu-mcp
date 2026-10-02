@@ -14,7 +14,7 @@ A Model Context Protocol (MCP) server for querying your local [`mu`](https://git
 - **Three tools:** query, view emails and open attachments (using default OS viewer).
 - **Fast, flexible mail search** using the `mu` index
 - **Claude Desktop ready**: simple installation and config
-- **Python, pixi, and MCP SDK** based
+- **Python, uv, and MCP SDK** based
 
 ## Installation
 
@@ -23,23 +23,17 @@ Clone this repository and install dependencies:
 ```sh
 git clone https://github.com/danielfleischer/mu-mcp.git
 cd mu-mcp
-pixi install
+uv sync
 ```
 
 ## Usage
 
 ### Run the MCP Server
 
-With [pixi](https://pixi.sh):
+With [uv](https://github.com/astral-sh/uv):
 
 ```sh
-pixi run start
-```
-
-Or directly with Python:
-
-```sh
-python mu_mcp/mu_mcp.py
+uv run --directory . mcp run mu_mcp/mu_mcp.py
 ```
 
 ### Claude Desktop Integration
@@ -49,16 +43,20 @@ Add to your `claude_desktop_config.json`:
 ```json
 "mcpServers": {
   "mu_mcp": {
-    "command": "pixi",
+    "command": "uv",
     "args": [
       "run",
-      "--manifest-path",
+      "--directory",
       "PROJECT_PATH",
-      "start"
+      "mcp",
+      "run",
+      "mu_mcp/mu_mcp.py"
     ]
   }
 }
 ```
+
+Replace `PROJECT_PATH` with the path to your cloned repo.
 
 ## Query
 
