@@ -1,102 +1,176 @@
+import re
+import shlex
+import subprocess
+import tempfile
+from pathlib import Path
+from typing import Literal
+
+import html2text
 from mcp.server.fastmcp import FastMCP
 
-# Initialize FastMCP server
-mcp = FastMCP("mu_mcp")
+HERE = Path(__file__).parent
+
+mcp = FastMCP(
+    "email",
+    instructions=(
+        "Search and read the user's local email via `mu`. Typical flow: "
+        "search_emails -> view_emails (using the paths it returns) -> "
+        "list_attachments / open_attachment. Call mu_help only when the "
+        "short syntax guide in search_emails isn't enough."
+    ),
+)
+
+NO_PLAIN_TEXT = "[No plain text body found]"
 
 
-mu_query_man = open("mu_mcp/mu-query.txt", "r").read().strip()
-mu_find_man = open("mu_mcp/mu-find.txt", "r").read().strip()
-mu_extract_man = open("mu_mcp/mu-extract.txt", "r").read().strip()
+def html_to_text(html: str) -> str:
+    converter = html2text.HTML2Text()
+    converter.body_width = 0  # don't hard-wrap lines
+    converter.ignore_images = True
+    converter.ignore_links = True  # marketing mail is mostly tracking URLs
+    text = converter.handle(html)
+    # drop invisible preheader padding and trailing whitespace
+    text = re.sub(r"[\u200b-\u200f\u034f\u00ad\ufeff]", "", text).replace("\xa0", " ")
+    lines = [line.rstrip() for line in text.splitlines()]
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()
 
 
-# Add MCP health check tool
-@mcp.tool("health_check")
-def health_check() -> str:
-    """Health check for the MCP server."""
-    return "ok"
+def run_mu(args: list[str]) -> tuple[int, str, str]:
+    result = subprocess.run(["mu", *args], capture_output=True, text=True)
+    return result.returncode, result.stdout.strip(), result.stderr.strip()
 
 
-def query(query: str) -> str:
-    """Query `mu` by providing a valid query to be sent in the following way.
+@mcp.tool()
+def search_emails(
+    query: str,
+    max_results: int = 30,
+    sort: Literal["date", "from", "subject", "size"] = "date",
+    newest_first: bool = True,
+    include_thread: bool = False,
+) -> str:
+    """Search the local mail index with a `mu` query.
 
-    Syntax:
+    Returns one line per message: `date | from | subject | path`. Pass the
+    path to view_emails or list_attachments.
 
-    ```
-    mu find $query
-    ```
+    Query syntax (quote phrases with double quotes; no shell is involved):
+    - Bare words search from/to/cc/subject/body: `invoice march`
+    - Fields: from: to: cc: contact: (any address) subject: body:
+      maildir: (e.g. maildir:/Inbox) list: tag: file: (attachment name)
+      mime: (attachment type, e.g. mime:application/pdf, mime:image/*)
+    - Dates: date:2024-04..2024-04, date:2w.. (last 2 weeks),
+      date:..2023, date:today..  (units: h d w m y)
+    - Flags: flag:attach flag:unread flag:flagged flag:replied flag:personal
+      flag:list flag:calendar
+    - Operators: and, or, not, parentheses; implicit `and` between terms.
+    - Wildcard suffix: `budg*`. Regex: `subject:/re.?port/`
+    - Names match words in the address too: from:alice, from:amazon
 
-    Here is the syntax guide for mu queries.
+    Examples:
+    - from:alice date:1w..
+    - subject:"meeting notes"
+    - mime:application/pdf and date:2025-04..2025-04
+    - (from:bank or from:visa) and flag:unread
+    - contact:bob and not flag:list
+
+    Args:
+        query: the mu query.
+        max_results: cap on returned messages; raise it or narrow the query
+            if the result is cut off.
+        sort: field to sort by.
+        newest_first: reverse sort order (newest/Z first).
+        include_thread: also return other messages from matching threads.
     """
-    import subprocess
-
+    args = ["find", "--fields", "d | f | s | l", "--skip-dups", "--sortfield", sort, "--maxnum", str(max_results)]
+    if newest_first:
+        args.append("--reverse")
+    if include_thread:
+        args.append("--include-related")
     try:
-        result = subprocess.run(
-            ["mu", "find"] + query.split(), capture_output=True, text=True, check=True
-        )
-        return result.stdout.strip()
-    except subprocess.CalledProcessError as e:
-        return f"Error: {e.stderr.strip()}"
+        terms = shlex.split(query)
+    except ValueError as e:
+        return f"Error parsing query ({e}); check quoting."
+    code, out, err = run_mu(args + terms)
+    if code == 2 or (code == 0 and not out):
+        return "No matches. Try fewer terms, a wider date range, or bare words instead of field: prefixes."
+    if code != 0:
+        return f"Error: {err}\nSee mu_help('query') for the full syntax."
+    lines = out.splitlines()
+    if len(lines) >= max_results:
+        out += f"\n\n[Showing first {max_results}; there may be more. Narrow the query or raise max_results.]"
+    return out
 
 
-if query.__doc__:
-    query.__doc__ += "\n\n" + mu_find_man + mu_query_man
+def _view_one(path: str, max_chars: int) -> str:
+    code, out, err = run_mu(["view", path])
+    if code != 0:
+        return f"Error viewing {path}: {err}"
+    if NO_PLAIN_TEXT in out:
+        code, html_out, _ = run_mu(["view", "--format=html", path])
+        if code == 0:
+            headers, _, html = html_out.partition("\n\n")
+            out = headers + "\n\n" + html_to_text(html)
+    if len(out) > max_chars:
+        out = out[:max_chars] + f"\n\n[Truncated at {max_chars} chars of {len(out)}.]"
+    return out
 
-mcp.tool("query")(query)
 
+@mcp.tool()
+def view_emails(paths: list[str], max_chars: int = 20000) -> str:
+    """Read emails (headers + body as text) given paths from search_emails.
 
-@mcp.tool("view")
-def view(paths: str) -> str:
-    """View emails using `mu`, by providing their paths.
+    HTML-only emails are converted to plain text.
 
-    ```
-    mu view $paths
-    ```
-
-    Paths can be extracted using the following:
-    ```
-    mu find --fields "l" SOME_QUERY
-    ```
+    Args:
+        paths: message file paths.
+        max_chars: per-message cap on returned text.
     """
-    import subprocess
-
-    try:
-        result = subprocess.run(
-            ["mu", "view"] + paths.split(), capture_output=True, text=True, check=True
-        )
-        return result.stdout.strip()
-    except subprocess.CalledProcessError as e:
-        return f"Error: {e.stderr.strip()}"
+    return ("\n\n" + "=" * 40 + "\n\n").join(_view_one(p, max_chars) for p in paths)
 
 
-def get_attachment(command: str) -> str:
-    r"""Open attachments in email by providing the email path.
+@mcp.tool()
+def list_attachments(path: str) -> str:
+    """List the MIME parts (attachments, inline images, bodies) of one email."""
+    code, out, err = run_mu(["extract", path])
+    return out if code == 0 else f"Error: {err}"
 
-    The tool downloads the attachment into a temp dir and open it.
 
-    The `command` includes the paths and the pattern of attachment files.
+@mcp.tool()
+def open_attachment(path: str, pattern: str = ".*", open_in_viewer: bool = True) -> str:
+    """Save attachments of an email to a temp dir, optionally opening them.
 
-    The prefix `mu extract --target-dir /tmp --overwrite --play` SHOULD NOT appear in `command`.
+    Returns the saved file paths, so their contents can be read afterwards.
 
-    See the man page for `mu extract`.
+    Args:
+        path: message file path.
+        pattern: case-sensitive PCRE matched against attachment file names,
+            e.g. `.*\\.pdf$` or `(?i)invoice`. Default: all attachments.
+        open_in_viewer: also open each file with the OS default application.
     """
-    import subprocess
+    target = tempfile.mkdtemp(prefix="mu_mcp_")
+    args = ["extract", "--target-dir", target, "--overwrite"]
+    if open_in_viewer:
+        args.append("--play")
+    code, _, err = run_mu(args + [path, pattern])
+    if code != 0:
+        return f"Error: {err}\nUse list_attachments to see the file names."
+    files = sorted(str(p) for p in Path(target).iterdir())
+    if not files:
+        return "No attachment matched the pattern. Use list_attachments to see the file names."
+    return "Saved:\n" + "\n".join(files)
 
-    try:
-        result = subprocess.run(
-            ["mu", "extract", "--target-dir", "/tmp", "--overwrite", "--play"] + command.split(),
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        return result.stdout.strip()
-    except subprocess.CalledProcessError as e:
-        return f"Error: {e.stderr.strip()}"
 
+@mcp.tool()
+def mu_help(topic: Literal["query", "fields", "find", "extract"]) -> str:
+    """Full mu reference, for when the short guide in search_emails isn't enough.
 
-if get_attachment.__doc__:
-    get_attachment.__doc__ += "\n\n" + mu_extract_man
-
-mcp.tool("get_attachment")(get_attachment)
+    Topics: query (complete query language), fields (live list of fields and
+    flags), find (search options), extract (attachment handling).
+    """
+    if topic == "fields":
+        code, out, err = run_mu(["info", "fields"])
+        return out if code == 0 else f"Error: {err}"
+    return (HERE / f"mu-{topic}.txt").read_text().strip()
 
 
 if __name__ == "__main__":

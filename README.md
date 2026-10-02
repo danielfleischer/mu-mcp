@@ -11,12 +11,15 @@ A Model Context Protocol (MCP) server for querying your local [`mu`](https://git
 ## Features
 
 - **Stdio MCP server** for easy integration
-- **Three tools:** query, view emails and open attachments (using default OS viewer).
+- **Tools:** `search_emails`, `view_emails` (HTML-only emails converted to text), `list_attachments`, `open_attachment` (saves to a temp dir and optionally opens with the default OS viewer), and `mu_help` for the full `mu` reference on demand.
+- **Small context footprint:** a short query guide lives in the tool description; the full man pages are only loaded when the model asks for them.
 - **Fast, flexible mail search** using the `mu` index
 - **Claude Desktop ready**: simple installation and config
 - **Python, uv, and MCP SDK** based
 
 ## Installation
+
+Requires [`mu`](https://github.com/djcb/mu) installed and your mail indexed (`mu init` + `mu index`).
 
 Clone this repository and install dependencies:
 
@@ -42,7 +45,7 @@ Add to your `claude_desktop_config.json`:
 
 ```json
 "mcpServers": {
-  "mu_mcp": {
+  "email": {
     "command": "uv",
     "args": [
       "run",
@@ -58,6 +61,14 @@ Add to your `claude_desktop_config.json`:
 
 Replace `PROJECT_PATH` with the path to your cloned repo.
 
+### Claude Code Integration
+
+```sh
+claude mcp add email -s user -- uv run --directory PROJECT_PATH mcp run mu_mcp/mu_mcp.py
+```
+
+Use `-s local` instead to enable it only in the current project. Check it with `/mcp` in a new session.
+
 ## Query
 
 Ask Claude to find emails, e.g. "Find emails with a PDF attachment that were sent last April and open the PDF", "Show me the email I received from Alice last week", or "Find emails with the subject 'Meeting Notes'".
@@ -66,3 +77,4 @@ Ask Claude to find emails, e.g. "Find emails with a PDF attachment that were sen
 
 - [x] Adding a tool to view an email.
 - [x] Adding a tool to find and download attachments.
+- [x] Progressive disclosure of the `mu` man pages via `mu_help`.
