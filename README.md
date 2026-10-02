@@ -78,3 +78,12 @@ Ask Claude to find emails, e.g. "Find emails with a PDF attachment that were sen
 - [x] Adding a tool to view an email.
 - [x] Adding a tool to find and download attachments.
 - [x] Progressive disclosure of the `mu` man pages via `mu_help`.
+
+### Future ideas
+
+- [ ] Add a `mu-mcp` console script (`[project.scripts]` + `main()`) so `uvx mu-mcp` works from PyPI; make that the README's install method.
+- [ ] Rewrite the server `instructions` around *when* to use it (anything about the user's email, inbox, messages, receipts, attachments) — that's what helps the model find the tools.
+- [ ] Return attachment text (PDF, DOCX) from `open_attachment`; Claude Desktop can't read the saved file paths.
+- [ ] `view_thread`: show a whole conversation from one message.
+- [ ] `find_contacts` via `mu cfind`, to resolve a name to its addresses.
+
