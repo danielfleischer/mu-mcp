@@ -1,8 +1,11 @@
 
 # mu-mcp: MCP Server for the `mu` Mail Indexer
 
-[![GitHub release](https://img.shields.io/github/v/release/danielfleischer/mu-mcp)](https://github.com/danielfleischer/mu-mcp/releases)
-[![GitHub license](https://img.shields.io/github/license/danielfleischer/mu-mcp?color=blue)](https://github.com/danielfleischer/mu-mcp/blob/master/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/mu-mcp?color=blue)](https://pypi.org/project/mu-mcp/)
+[![Python](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fdanielfleischer%2Fmu-mcp%2Fmaster%2Fpyproject.toml&color=yellow)](https://github.com/danielfleischer/mu-mcp/blob/master/pyproject.toml)
+[![GitHub release](https://img.shields.io/github/v/release/danielfleischer/mu-mcp?color=orange)](https://github.com/danielfleischer/mu-mcp/releases)
+[![MCP](https://img.shields.io/badge/MCP-server-blueviolet)](https://modelcontextprotocol.io)
+[![GitHub license](https://img.shields.io/github/license/danielfleischer/mu-mcp?color=red)](https://github.com/danielfleischer/mu-mcp/blob/master/LICENSE)
 
 A Model Context Protocol (MCP) server for querying your local [`mu`](https://github.com/djcb/mu) mail index. This server enables fast, structured mail search from Claude Desktop and other MCP clients.
 
