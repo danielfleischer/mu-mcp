@@ -13,10 +13,14 @@ HERE = Path(__file__).parent
 mcp = FastMCP(
     "email",
     instructions=(
-        "Search and read the user's local email via `mu`. Typical flow: "
-        "search_emails -> view_emails (using the paths it returns) -> "
-        "list_attachments / open_attachment. Call mu_help only when the "
-        "short syntax guide in search_emails isn't enough."
+        "Use this server when a request involves the user's email, inbox, "
+        "email messages or conversations, receipts, invoices, or email attachments. "
+        "It searches the user's local mail index and reads messages, including "
+        "HTML-only email, and can list, save, and open attachments. "
+        "Start with search_emails to find relevant messages, then pass their "
+        "paths to view_emails to read them or to list_attachments and "
+        "open_attachment to work with attached files. Call mu_help when the "
+        "short query guide in search_emails isn't enough."
     ),
 )
 
@@ -173,5 +177,10 @@ def mu_help(topic: Literal["query", "fields", "find", "extract"]) -> str:
     return (HERE / f"mu-{topic}.txt").read_text().strip()
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Run the email MCP server over stdio."""
     mcp.run(transport="stdio")
+
+
+if __name__ == "__main__":
+    main()

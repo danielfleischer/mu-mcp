@@ -21,23 +21,23 @@ A Model Context Protocol (MCP) server for querying your local [`mu`](https://git
 
 Requires [`mu`](https://github.com/djcb/mu) installed and your mail indexed (`mu init` + `mu index`).
 
-Clone this repository and install dependencies:
+With [uv](https://github.com/astral-sh/uv) installed, run the published package
+from PyPI without cloning the repository:
 
 ```sh
-git clone https://github.com/danielfleischer/mu-mcp.git
-cd mu-mcp
-uv sync
+uvx mu-mcp
 ```
 
 ## Usage
 
 ### Run the MCP Server
 
-With [uv](https://github.com/astral-sh/uv):
-
 ```sh
-uv run --directory . mcp run mu_mcp/mu_mcp.py
+uvx mu-mcp
 ```
+
+The server communicates over stdio; normally your MCP client launches it using
+the configuration below.
 
 ### Claude Desktop Integration
 
@@ -46,25 +46,19 @@ Add to your `claude_desktop_config.json`:
 ```json
 "mcpServers": {
   "email": {
-    "command": "uv",
-    "args": [
-      "run",
-      "--directory",
-      "PROJECT_PATH",
-      "mcp",
-      "run",
-      "mu_mcp/mu_mcp.py"
-    ]
+    "command": "uvx",
+    "args": ["mu-mcp"]
   }
 }
 ```
 
-Replace `PROJECT_PATH` with the path to your cloned repo.
+The client needs `uvx` and `mu` on its PATH. If it cannot find `uvx`, use the
+absolute path returned by `which uvx` as the command.
 
 ### Claude Code Integration
 
 ```sh
-claude mcp add email -s user -- uv run --directory PROJECT_PATH mcp run mu_mcp/mu_mcp.py
+claude mcp add email -s user -- uvx mu-mcp
 ```
 
 Use `-s local` instead to enable it only in the current project. Check it with `/mcp` in a new session.
@@ -75,15 +69,23 @@ Ask Claude to find emails, e.g. "Find emails with a PDF attachment that were sen
 
 ## Development
 
+To run from a local checkout:
+
+```sh
+git clone https://github.com/danielfleischer/mu-mcp.git
+cd mu-mcp
+uv sync
+uv run mu-mcp
+```
+
 - [x] Adding a tool to view an email.
 - [x] Adding a tool to find and download attachments.
 - [x] Progressive disclosure of the `mu` man pages via `mu_help`.
+- [x] Add a `mu-mcp` console script and use `uvx mu-mcp` as the install method.
+- [x] Describe when to use the server in its instructions, including email, inbox, messages, receipts, and attachments.
 
 ### Future ideas
 
-- [ ] Add a `mu-mcp` console script (`[project.scripts]` + `main()`) so `uvx mu-mcp` works from PyPI; make that the README's install method.
-- [ ] Rewrite the server `instructions` around *when* to use it (anything about the user's email, inbox, messages, receipts, attachments) — that's what helps the model find the tools.
 - [ ] Return attachment text (PDF, DOCX) from `open_attachment`; Claude Desktop can't read the saved file paths.
 - [ ] `view_thread`: show a whole conversation from one message.
 - [ ] `find_contacts` via `mu cfind`, to resolve a name to its addresses.
-
