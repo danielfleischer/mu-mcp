@@ -14,11 +14,13 @@ mcp = FastMCP(
     "email",
     instructions=(
         "Use this server when a request involves the user's email, inbox, "
-        "email messages or conversations, receipts, invoices, or email attachments. "
+        "email messages or conversations, email contacts, receipts, invoices, or email attachments. "
         "It searches the user's local mail index and reads messages, including "
         "HTML-only email, and can list, save, and open attachments. "
+        "Use find_contacts to resolve names to email addresses. "
         "Start with search_emails to find relevant messages, then pass their "
-        "paths to view_emails to read them or to list_attachments and "
+        "paths to view_emails to read them, view_thread to read the conversation, "
+        "or to list_attachments and "
         "open_attachment to work with attached files. Call mu_help when the "
         "short query guide in search_emails isn't enough."
     ),
@@ -55,7 +57,7 @@ def search_emails(
     """Search the local mail index with a `mu` query.
 
     Returns one line per message: `date | from | subject | path`. Pass the
-    path to view_emails or list_attachments.
+    path to view_emails, view_thread, or list_attachments.
 
     Query syntax (quote phrases with double quotes; no shell is involved):
     - Bare words search from/to/cc/subject/body: `invoice march`
@@ -130,6 +132,75 @@ def view_emails(paths: list[str], max_chars: int = 20000) -> str:
         max_chars: per-message cap on returned text.
     """
     return ("\n\n" + "=" * 40 + "\n\n").join(_view_one(p, max_chars) for p in paths)
+
+
+@mcp.tool()
+def view_thread(path: str, max_results: int = 30, max_chars: int = 20000) -> str:
+    """Read a conversation given one message path from search_emails.
+
+    Returns indexed messages oldest first, with their paths, headers, and
+    bodies. Duplicate Message-IDs are omitted and HTML-only bodies are
+    converted to text. Thread membership is determined by mu's mail index.
+
+    Args:
+        path: path of any indexed message in the conversation.
+        max_results: cap on messages; raise it if the conversation is cut off.
+        max_chars: per-message cap on returned text.
+    """
+    if not path.strip():
+        return "Error: path must not be empty."
+    if max_results < 1 or max_chars < 1:
+        return "Error: max_results and max_chars must be positive."
+    # Keep the path a single literal query term, including spaces and quotes.
+    quoted_path = path.replace("\\", "\\\\").replace('"', '\\"')
+    args = [
+        "find", "--format=plain", "--nocolor", "--fields", "l",
+        "--include-related", "--skip-dups", "--sortfield", "date",
+        "--maxnum", str(max_results + 1), "--", f'path:"{quoted_path}"',
+    ]
+    code, out, err = run_mu(args)
+    if code == 2 or (code == 0 and not out):
+        return "No thread found. Use a message path from search_emails that is still in the index."
+    if code != 0:
+        return f"Error finding thread: {err}"
+    paths = out.splitlines()
+    messages = [f"Path: {p}\n\n{_view_one(p, max_chars)}" for p in paths[:max_results]]
+    result = ("\n\n" + "=" * 40 + "\n\n").join(messages)
+    if len(paths) > max_results:
+        result += f"\n\n[Showing first {max_results} messages; raise max_results to read more of the conversation.]"
+    return result
+
+
+@mcp.tool()
+def find_contacts(pattern: str, max_results: int = 30, personal: bool = False) -> str:
+    """Resolve a name or email address using contacts in the local mu index.
+
+    Returns one line per contact with its email address and name (if known).
+    Use the addresses with from:, to:, or contact: in search_emails.
+
+    Args:
+        pattern: case-insensitive PCRE matched against names and addresses,
+            e.g. `Alice`, `alice@example\\.com`, or `@example\\.com$`.
+            An empty pattern lists all contacts, subject to max_results.
+        max_results: cap on contacts; raise it if the result is cut off.
+        personal: only contacts seen in messages involving one of your
+            personal addresses configured in mu, excluding list-only contacts.
+    """
+    if max_results < 1:
+        return "Error: max_results must be positive."
+    args = ["cfind", "--format=plain", "--nocolor", "--maxnum", str(max_results + 1)]
+    if personal:
+        args.append("--personal")
+    code, out, err = run_mu(args + ["--", pattern])
+    if code == 2 or (code == 0 and not out):
+        return "No contacts found. Try part of a name or email address, or disable personal."
+    if code != 0:
+        return f"Error finding contacts: {err}"
+    lines = out.splitlines()
+    result = "\n".join(lines[:max_results])
+    if len(lines) > max_results:
+        result += f"\n\n[Showing first {max_results} contacts; narrow the pattern or raise max_results.]"
+    return result
 
 
 @mcp.tool()

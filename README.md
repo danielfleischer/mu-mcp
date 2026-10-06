@@ -14,7 +14,7 @@ A Model Context Protocol (MCP) server for querying your local [`mu`](https://git
 ## Features
 
 - **Stdio MCP server** for easy integration
-- **Tools:** `search_emails`, `view_emails` (HTML-only emails converted to text), `list_attachments`, `open_attachment` (saves to a temp dir and optionally opens with the default OS viewer), and `mu_help` for the full `mu` reference on demand.
+- **Tools:** `search_emails`, `view_emails` (HTML-only emails converted to text), `view_thread` (reads a conversation from one message), `find_contacts` (resolves names to email addresses), `list_attachments`, `open_attachment` (saves to a temp dir and optionally opens with the default OS viewer), and `mu_help` for the full `mu` reference on demand.
 - **Small context footprint:** a short query guide lives in the tool description; the full man pages are only loaded when the model asks for them.
 - **Fast, flexible mail search** using the `mu` index
 - **Claude Desktop ready**: simple installation and config
@@ -70,6 +70,18 @@ Use `-s local` instead to enable it only in the current project. Check it with `
 
 Ask Claude to find emails, e.g. "Find emails with a PDF attachment that were sent last April and open the PDF", "Show me the email I received from Alice last week", or "Find emails with the subject 'Meeting Notes'".
 
+To read a conversation, pass any message path from `search_emails` to
+`view_thread(path)`. It returns indexed messages oldest first, omits duplicate
+Message-IDs, and converts HTML-only bodies to text. The defaults are 30 messages
+and 20,000 characters per message; increase `max_results` or `max_chars` if the
+output is truncated.
+
+Use `find_contacts("Alice")` to resolve a name before searching. Its pattern is
+a case-insensitive regular expression matching names or addresses, such as
+`@example\.com$`. An empty pattern lists contacts. Results default to 30 contacts;
+use `max_results` to change the limit, or `personal=True` to restrict results to
+contacts seen in messages involving your personal addresses configured in `mu`.
+
 ## Development
 
 To run from a local checkout:
@@ -86,9 +98,12 @@ uv run mu-mcp
 - [x] Progressive disclosure of the `mu` man pages via `mu_help`.
 - [x] Add a `mu-mcp` console script and use `uvx mu-mcp` as the install method.
 - [x] Describe when to use the server in its instructions, including email, inbox, messages, receipts, and attachments.
+- [x] `view_thread`: show a whole conversation from one message.
+- [x] `find_contacts` via `mu cfind`, to resolve a name to its addresses.
+
+Run the tests with `uv run python -m unittest discover -s tests`. Integration
+tests use an isolated temporary mail index and are skipped if `mu` is unavailable.
 
 ### Future ideas
 
 - [ ] Return attachment text (PDF, DOCX) from `open_attachment`; Claude Desktop can't read the saved file paths.
-- [ ] `view_thread`: show a whole conversation from one message.
-- [ ] `find_contacts` via `mu cfind`, to resolve a name to its addresses.
